@@ -864,7 +864,8 @@ const TITLES={
   seikai:{n:'星海の',   rar:2, eff:{ct:30}},
   ougon:{n:'黄金律の',  rar:2, eff:{boost:18,def:6}},
   tokoyo:{n:'常世の',   rar:2, eff:{drain:20}},
-  unknown6:{n:'────', rar:3, eff:{boost:45,def:12,hp:40,ct:30,drain:25}},
+  unknown6:{n:'────', rar:3, special:true, eff:{boost:45,def:12,hp:40,ct:30,drain:25},
+    hint:'３つの超レアが重なるとき、名もなき何かが目を覚ます'},
   /* コンボ称号: 特定2〜3種の組み合わせでのみ生まれる相乗効果。通常抽選では出ない(rollTitleの対象外)。 */
   shiryu:{n:'始竜の', rar:4, combo:true, eff:{hp:44,def:9},
     hint:'その龍は眠らない', need:['yuukyuu','ryuu']},
@@ -2488,15 +2489,14 @@ function openDex(){
   sh.innerHTML=sheetX('confirm')+'<h4>称号図鑑</h4>';
   Object.keys(TITLES).forEach(k=>{
     const T=TITLES[k];
-    if(T.combo)return; /* コンボ称号は下の専用セクションで表示 */
+    if(T.combo||T.special)return; /* コンボ/特殊称号は下の専用セクションで表示 */
     const found=S.found.includes(k);
-    const hidden=(T.rar>=2)&&!found;
+    const hidden=(T.rar>=1)&&!found;
     const d=document.createElement('div');
     d.className='dex-line'+(T.rar>=2?' sr':'')+(hidden?' unk':'');
     const rarTxt=['','レア','超レア','不詳','特殊'][T.rar];
     d.innerHTML='<span class="dx-n">'+(hidden?'『???』':'『'+T.n+'』')+'</span>'+
-      '<span class="dx-e">'+(hidden?'未発見'+(T.rar===3?' — 特定の超レア称号3種の融合で生まれるという':'')
-        :effText(T.eff))+'</span>'+
+      '<span class="dx-e">'+(hidden?'未発見':effText(T.eff))+'</span>'+
       (rarTxt?'<span style="margin-left:auto;font-size:9px;color:var(--arcane)">'+rarTxt+'</span>':'');
     sh.appendChild(d);
   });
@@ -2506,14 +2506,15 @@ function openDex(){
   hintNote.style.cssText='font-size:10px;color:var(--parch-dim);text-align:center;margin:-6px 0 10px';
   hintNote.textContent='装備錬成時、特定の称号素材を組み合わせると生まれるという。';
   sh.appendChild(hintNote);
-  COMBO_IDS.forEach(k=>{
+  [...COMBO_IDS,'unknown6'].forEach(k=>{
     const T=TITLES[k];
     const found=S.found.includes(k);
     const d=document.createElement('div');
     d.className='dex-line sr'+(found?'':' unk');
+    const ingredientTxt=T.need?T.need.map(t=>TITLES[t].n).join('+'):'超レア×3';
     d.innerHTML='<span class="dx-n">'+(found?'『'+T.n+'』':'『???』')+'</span>'+
-      '<span class="dx-e">'+(found?effText(T.eff)+'（'+T.need.map(t=>TITLES[t].n).join('+')+'）'
-        :'??+?? '+T.hint)+'</span>';
+      '<span class="dx-e">'+(found?effText(T.eff)+'（'+ingredientTxt+'）'
+        :(T.need?'??+?? ':'??+??+?? ')+T.hint)+'</span>';
     sh.appendChild(d);
   });
   $('#confirm-wrap').classList.add('on');
