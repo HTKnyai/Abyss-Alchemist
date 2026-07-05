@@ -830,8 +830,8 @@ const SFX=(()=>{
 const BGM=(()=>{
   const TRACKS={
     base:'bgm/Peritune_Bewitched_Forest_loop.mp3',
-    0:'bgm/PerituneMaterial_World_OP2.mp3',
-    1:'bgm/PerituneMaterial_Windmill_Village.mp3',
+    0:'bgm/PerituneMaterial_Windmill_Village.mp3',
+    1:'bgm/PerituneMaterial_World_OP2.mp3',
     2:'bgm/Peritune_Glistening_Ripples.mp3',
     3:'bgm/Peritune_Black_Crystal_loop.mp3',
     4:'bgm/PerituneMaterial_Glimmering_Woods_loop.mp3',
@@ -839,7 +839,7 @@ const BGM=(()=>{
   let on=true, cur=null;
   const el=new Audio();el.loop=true;el.volume=.35;
   return {
-    toggle(){on=!on; if(on){if(cur)el.play().catch(()=>{})} else el.pause(); return on},
+    toggle(){on=!on; if(on){if(cur!==null)el.play().catch(()=>{})} else el.pause(); return on},
     setOn(v){on=v; if(!on)el.pause()},
     isOn(){return on},
     play(key){
@@ -915,6 +915,17 @@ const COMBO_IDS=Object.keys(TITLES).filter(k=>TITLES[k].combo);
 function findCombo(titleIds){
   const sorted=[...titleIds].sort().join(',');
   return COMBO_IDS.find(k=>[...TITLES[k].need].sort().join(',')===sorted);
+}
+/* 超レア以外の3種を選び、うち2種がコンボ成立する場合、残り1種を上乗せした特殊合成として扱う */
+function findPartialCombo(titleIds){
+  if(titleIds.length!==3||titleIds.some(t=>TITLES[t].rar>=2))return null;
+  for(let i=0;i<3;i++){
+    const pair=titleIds.slice();
+    const extra=pair.splice(i,1)[0];
+    const comboOut=findCombo(pair);
+    if(comboOut)return{comboOut,extra};
+  }
+  return null;
 }
 const effText=e=>{const p=[];if(e.atk)p.push('攻+'+e.atk);if(e.def)p.push('防+'+e.def);
   if(e.hp)p.push('HP+'+e.hp);if(e.ct)p.push('CT-'+e.ct+'%');
@@ -2810,9 +2821,21 @@ function craft(id){
     const chosen=selCat.slice().sort((a,b)=>b-a).map(i=>({i,tm:tp[i]})).filter(x=>x.tm);
     const ids=chosen.map(x=>x.tm.t);
     comboOut=ids.length>=2?findCombo(ids):null;
+    let extraId=null;
+    if(!comboOut){
+      const pc=findPartialCombo(ids);
+      if(pc){comboOut=pc.comboOut;extraId=pc.extra}
+    }
     if(comboOut){
-      tn=[comboOut];
+      tn=extraId?[comboOut,extraId]:[comboOut];
       bonus={...TITLES[comboOut].eff};
+      if(extraId){
+        const e=TITLES[extraId].eff;
+        for(const k in e){
+          if(k==='elem')bonus.elem=e.elem;
+          else bonus[k]=(bonus[k]||0)+e[k];
+        }
+      }
       if(!S.found.includes(comboOut)){S.found.push(comboOut);comboNew=true}
     }else{
       bonus={};tn=[];

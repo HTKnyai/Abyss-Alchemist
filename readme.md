@@ -1,8 +1,12 @@
 # BGMについて
 PERITUNE様より
 Bewitched_Forest 拠点BGM
-World_OP2　遺跡BGM
-Windmill_Village 草原
+Windmill_Village 遺跡BGM
+World_OP2　草原BGM
 Peritune_Glistening_Ripples　凍った海
 Black_Crystal　燃え盛る地
 Glimmering_Woods 遺跡深淵
+
+v10.2
+遺跡BGMと草原BGMを交換
+BGMを一度オフにすると再度オンにしても無音になってしまう問題の修正
